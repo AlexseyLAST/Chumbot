@@ -1,17 +1,21 @@
 import asyncio
 import logging
+import os
 import uvicorn
 
-from bot.discord_bot import bot, TOKEN
+from bot.discord_bot import TOKEN, bot
 from web.app import app
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 async def main():
+    # Render передаёт порт в переменную окружения PORT, по умолчанию для локала 8000
+    port = int(os.getenv("PORT", 8000))
+
     config = uvicorn.Config(
         app, 
-        host="127.0.0.1", 
-        port=8000, 
+        host="0.0.0.0",  # Слушаем внешние подключения
+        port=port, 
         loop="asyncio", 
         log_level="info"
     )

@@ -1,0 +1,36 @@
+import asyncio
+import logging
+import uvicorn
+
+from bot.discord_bot import bot, TOKEN
+from web.app import app
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
+async def main():
+    config = uvicorn.Config(
+        app, 
+        host="127.0.0.1", 
+        port=8000, 
+        loop="asyncio", 
+        log_level="info"
+    )
+    server = uvicorn.Server(config)
+
+    async with bot:
+        try:
+            await asyncio.gather(
+                bot.start(TOKEN),
+                server.serve(),
+            )
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            pass
+        finally:
+            if not bot.is_closed():
+                await bot.close()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n[Chumbot] Успешно остановлен.")

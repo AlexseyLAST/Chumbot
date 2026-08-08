@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Панель сообщений{% endblock %} — Пульт</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="frame">
+    <aside class="rail">
+      <div class="rail-brand">
+        <span class="rail-dot"></span>
+        <span>ПУЛЬТ</span>
+      </div>
+      <nav class="rail-nav">
+        <a href="/" class="{{ 'active' if request.url.path == '/' else '' }}">Сообщения</a>
+        <a href="/new" class="{{ 'active' if request.url.path == '/new' else '' }}">+ Новое</a>
+      </nav>
+      <div class="rail-status">
+        {% if bot_ready %}
+          <span class="status-dot online"></span>
+          <div>
+            <div class="status-label">В сети</div>
+            <div class="status-sub">{{ bot_user }}</div>
+          </div>
+        {% else %}
+          <span class="status-dot offline"></span>
+          <div>
+            <div class="status-label">Подключение…</div>
+            <div class="status-sub">ожидание бота</div>
+          </div>
+        {% endif %}
+      </div>
+    </aside>
+    <main class="stage">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

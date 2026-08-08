@@ -1,0 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #14161f;
+  --panel: #1b1e2b;
+  --panel-raised: #222639;
+  --border: #2c3044;
+  --text: #e7e9f2;
+  --text-muted: #8b8fa8;
+  --mint: #7fe7c4;
+  --mint-dim: #4ea78e;
+  --amber: #f2b84b;
+  --danger: #f2716a;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: rgba(255,255,255,0.06);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  color: var(--mint);
+}
+
+.muted { color: var(--text-muted); }
+
+.frame {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+/* --- Боковая панель --- */
+.rail {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 13px;
+  color: var(--mint);
+}
+
+.rail-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 8px var(--mint);
+}
+
+.rail-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rail-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rail-nav a:hover { background: var(--panel-raised); color: var(--text); }
+.rail-nav a.active { background: var(--panel-raised); color: var(--mint); }
+
+.rail-status {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel-raised);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.online { background: var(--mint); box-shadow: 0 0 6px var(--mint); }
+.status-dot.offline { background: var(--amber); box-shadow: 0 0 6px var(--amber); animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+.status-label { font-size: 13px; font-weight: 600; }
+.status-sub { font-size: 12px; color: var(--text-muted); }
+
+/* --- Основная область --- */
+.stage {
+  padding: 40px 48px;
+  max-width: 1000px;
+}
+
+.stage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+h1 { font-size: 26px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; margin: 0 0 6px; }
+p { margin: 0; }
+
+.banner {
+  background: rgba(242, 184, 75, 0.1);
+  border: 1px solid rgba(242, 184, 75, 0.3);
+  color: var(--amber);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* --- Кнопки --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--mint); color: #0e1712; }
+.btn-primary:hover { opacity: 0.9; }
+
+.btn-ghost { background: var(--panel-raised); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--mint-dim); }
+
+.btn-danger-ghost { background: transparent; color: var(--danger); border: 1px solid rgba(242,113,106,0.35); }
+.btn-danger-ghost:hover { background: rgba(242,113,106,0.1); }
+
+/* --- Пустое состояние --- */
+.empty {
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--panel);
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+}
+.empty-glyph { font-size: 32px; color: var(--mint-dim); margin-bottom: 12px; }
+.empty .btn { margin-top: 18px; }
+
+/* --- Сетка карточек --- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(127, 231, 196, 0.14);
+  color: var(--mint);
+}
+.tag-muted { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+.card-preview {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 36px;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.card-actions { display: flex; gap: 8px; margin-top: 6px; }
+.card-actions form { margin: 0; }
+
+/* --- Форма редактирования --- */
+.editor {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.form { display: flex; flex-direction: column; gap: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+
+.field input[type="text"],
+.field select,
+.field textarea {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+}
+
+.field input[type="text"]:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--mint-dim);
+}
+
+.field textarea { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; }
+
+.toggle-field { flex-direction: row; align-items: center; gap: 10px; }
+.toggle-field input { width: 16px; height: 16px; accent-color: var(--mint); }
+
+.embed-only { display: none; }
+
+.static-value { font-size: 13px; color: var(--text); font-weight: 400; padding: 10px 12px; background: var(--panel-raised); border-radius: 8px; }
+
+.form-actions { margin-top: 8px; }
+
+/* --- Предпросмотр сообщения Discord --- */
+.preview-panel { position: sticky; top: 24px; }
+.preview-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+
+.discord-mock {
+  display: flex;
+  gap: 12px;
+  background: #313338;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.discord-mock-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--mint), var(--mint-dim));
+  flex-shrink: 0;
+}
+
+.discord-mock-body { flex: 1; min-width: 0; }
+
+.discord-mock-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f2f3f5;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.discord-mock-bot {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--mint-dim);
+  color: #0e1712;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.discord-mock-text, .discord-mock-embed-desc {
+  font-size: 14px;
+  color: #dbdee1;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.discord-mock-embed {
+  margin-top: 6px;
+  background: #2b2d31;
+  border-left: 4px solid #5865F2;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.discord-mock-embed-title {
+  font-weight: 700;
+  color: #f2f3f5;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 900px) {
+  .frame { grid-template-columns: 1fr; }
+  .rail { flex-direction: row; align-items: center; padding: 14px 18px; }
+  .rail-nav { flex-direction: row; }
+  .rail-status { margin-top: 0; margin-left: auto; }
+  .editor { grid-template-columns: 1fr; }
+  .stage { padding: 24px; }
+}

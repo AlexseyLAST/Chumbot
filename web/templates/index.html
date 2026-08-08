@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Сообщения{% endblock %}
+{% block content %}
+  <header class="stage-head">
+    <div>
+      <h1>Управляемые сообщения</h1>
+      <p class="muted">Всё, что бот отправил и держит под контролем для редактирования.</p>
+    </div>
+    <a href="/new" class="btn btn-primary">+ Новое сообщение</a>
+  </header>
+
+  {% if not entries %}
+    <div class="empty">
+      <div class="empty-glyph">⌗</div>
+      <h2>Пока пусто</h2>
+      <p class="muted">Отправьте первое сообщение — например, правила сервера — и оно появится здесь для редактирования в любой момент.</p>
+      <a href="/new" class="btn btn-primary">Создать сообщение</a>
+    </div>
+  {% else %}
+    <div class="grid">
+      {% for key, entry in entries.items() %}
+        <div class="card">
+          <div class="card-head">
+            <h3>{{ entry.name }}</h3>
+            {% if entry.use_embed %}<span class="tag">embed</span>{% else %}<span class="tag tag-muted">текст</span>{% endif %}
+          </div>
+          <p class="card-preview">{{ (entry.content or "")[:140] }}{% if (entry.content or "")|length > 140 %}…{% endif %}</p>
+          <div class="card-meta">
+            <span>канал <code>{{ entry.channel_id }}</code></span>
+            <span>сообщение <code>{{ entry.message_id }}</code></span>
+          </div>
+          <div class="card-actions">
+            <a href="/edit/{{ key }}" class="btn btn-ghost">Редактировать</a>
+            <form method="post" action="/delete/{{ key }}" onsubmit="return confirm('Удалить сообщение «{{ entry.name }}» из Discord и из панели?');">
+              <button type="submit" class="btn btn-danger-ghost">Удалить</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

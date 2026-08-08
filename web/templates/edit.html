@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}{{ "Редактирование" if entry else "Новое сообщение" }}{% endblock %}
+{% block content %}
+  <header class="stage-head">
+    <div>
+      <h1>{{ "Редактировать: " + entry.name if entry else "Новое сообщение" }}</h1>
+      <p class="muted">
+        {% if entry %}
+          Изменения применятся к уже отправленному сообщению в Discord.
+        {% else %}
+          Выберите канал и содержимое — бот отправит и запомнит сообщение для будущих правок.
+        {% endif %}
+      </p>
+    </div>
+    <a href="/" class="btn btn-ghost">← Назад</a>
+  </header>
+
+  {% if not bot_ready %}
+    <div class="banner">Бот ещё не подключился к Discord. Подождите несколько секунд и обновите страницу.</div>
+  {% endif %}
+
+  <div class="editor">
+    <form method="post" action="{{ '/edit/' + key if entry else '/new' }}" class="panel form" id="msg-form">
+      {% if not entry %}
+        <label class="field">
+          <span>Название (для себя, не отправляется в Discord)</span>
+          <input type="text" name="name" placeholder="Например: Правила сервера" required />
+        </label>
+
+        <label class="field">
+          <span>Канал</span>
+          <select name="channel_id" required>
+            <option value="" disabled selected>Выберите канал…</option>
+            {% for guild, channel in channels %}
+              <option value="{{ channel.id }}">{{ guild.name }} → #{{ channel.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      {% else %}
+        <div class="field">
+          <span>Канал</span>
+          <div class="static-value"><code>{{ entry.channel_id }}</code> (нельзя изменить — создайте новое сообщение)</div>
+        </div>
+      {% endif %}
+
+      <label class="field toggle-field">
+        <input type="checkbox" name="use_embed" id="use_embed" value="true" {% if entry and entry.use_embed %}checked{% endif %} />
+        <span>Оформить как embed-карточку (с заголовком и цветной полосой)</span>
+      </label>
+
+      <label class="field embed-only">
+        <span>Заголовок embed</span>
+        <input type="text" name="embed_title" id="embed_title" value="{{ entry.embed_title if entry else '' }}" placeholder="Правила сервера" />
+      </label>
+
+      <label class="field embed-only">
+        <span>Цвет полосы (hex без #)</span>
+        <input type="text" name="embed_color" id="embed_color" value="{{ entry.embed_color if entry else '5865F2' }}" maxlength="6" />
+      </label>
+
+      <label class="field">
+        <span>Текст сообщения (поддерживается Markdown Discord)</span>
+        <textarea name="content" id="content" rows="12" placeholder="**1.** Будьте вежливы...">{{ entry.content if entry else '' }}</textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ "Сохранить и обновить в Discord" if entry else "Отправить в Discord" }}</button>
+      </div>
+    </form>
+
+    <div class="panel preview-panel">
+      <div class="preview-label">Предпросмотр</div>
+      <div class="discord-mock">
+        <div class="discord-mock-avatar"></div>
+        <div class="discord-mock-body">
+          <div class="discord-mock-name">Правила <span class="discord-mock-bot">БОТ</span></div>
+          <div class="discord-mock-text" id="preview-text"></div>
+          <div class="discord-mock-embed" id="preview-embed" style="display:none;">
+            <div class="discord-mock-embed-title" id="preview-embed-title"></div>
+            <div class="discord-mock-embed-desc" id="preview-embed-desc"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const contentEl = document.getElementById('content');
+    const useEmbedEl = document.getElementById('use_embed');
+    const embedTitleEl = document.getElementById('embed_title');
+    const embedColorEl = document.getElementById('embed_color');
+
+    const previewText = document.getElementById('preview-text');
+    const previewEmbed = document.getElementById('preview-embed');
+    const previewEmbedTitle = document.getElementById('preview-embed-title');
+    const previewEmbedDesc = document.getElementById('preview-embed-desc');
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function mdToHtml(str) {
+      let out = escapeHtml(str || '');
+      out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      out = out.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      out = out.replace(/\n/g, '<br/>');
+      return out;
+    }
+
+    function toggleEmbedFields() {
+      const on = useEmbedEl.checked;
+      document.querySelectorAll('.embed-only').forEach(el => el.style.display = on ? 'flex' : 'none');
+      renderPreview();
+    }
+
+    function renderPreview() {
+      const useEmbed = useEmbedEl.checked;
+      if (useEmbed) {
+        previewText.style.display = 'none';
+        previewEmbed.style.display = 'block';
+        previewEmbed.style.borderColor = '#' + (embedColorEl.value || '5865F2');
+        previewEmbedTitle.innerHTML = mdToHtml(embedTitleEl.value);
+        previewEmbedTitle.style.display = embedTitleEl.value ? 'block' : 'none';
+        previewEmbedDesc.innerHTML = mdToHtml(contentEl.value) || '<span class="muted">Текст появится здесь…</span>';
+      } else {
+        previewText.style.display = 'block';
+        previewEmbed.style.display = 'none';
+        previewText.innerHTML = mdToHtml(contentEl.value) || '<span class="muted">Текст появится здесь…</span>';
+      }
+    }
+
+    [contentEl, embedTitleEl, embedColorEl].forEach(el => el.addEventListener('input', renderPreview));
+    useEmbedEl.addEventListener('change', toggleEmbedFields);
+
+    toggleEmbedFields();
+  </script>
+{% endblock %}

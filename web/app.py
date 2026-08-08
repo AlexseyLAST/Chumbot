@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from bot import storage
 from bot.discord_bot import (
@@ -39,8 +40,17 @@ ALLOWED_USERS = [
 
 app = FastAPI(title="Discord Rules Manager")
 
-# Подключаем работу с сессиями (куки)
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+# 1. Корректная обработка HTTPS-заголовков от Render
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+
+# 2. Подключаем работу с сессиями (куки)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    session_cookie="chumbot_session",
+    same_site="lax",
+    https_only=False,
+)
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
@@ -100,7 +110,6 @@ async def callback(request: Request, code: str):
 
     user_id = int(user_data["id"])
 
-    # Временный вывод ID в консоль:
     print(f"\n[АВТОРИЗАЦИЯ] Твой Discord ID: {user_id}\n")
 
     # 3. Проверяем, есть ли пользователь в белом списке

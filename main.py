@@ -14,10 +14,12 @@ async def main():
 
     config = uvicorn.Config(
         app, 
-        host="0.0.0.0",  # Слушаем внешние подключения
+        host="0.0.0.0", 
         port=port, 
         loop="asyncio", 
-        log_level="info"
+        log_level="info",
+        proxy_headers=True,       # Считывать заголовки X-Forwarded-Proto от Render
+        forwarded_allow_ips="*"   # Доверять прокси Render
     )
     server = uvicorn.Server(config)
 

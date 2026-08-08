@@ -40,16 +40,16 @@ ALLOWED_USERS = [
 
 app = FastAPI(title="Discord Rules Manager")
 
-# 1. Корректная обработка HTTPS-заголовков от Render
+# 1. Сначала подключаем ProxyHeadersMiddleware
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
-# 2. Подключаем работу с сессиями (куки)
+# 2. Затем SessionMiddleware с включенным https_only
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_KEY,
     session_cookie="chumbot_session",
     same_site="lax",
-    https_only=False,
+    https_only=True,  # Обязательно True для работы кук на HTTPS
 )
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")

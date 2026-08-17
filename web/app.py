@@ -246,10 +246,18 @@ async def update_message(
 async def remove_message(request: Request, key: str):
     check_auth(request)
     entry = storage.get(key)
+    
     if entry:
+        # 1. Сначала пробуем удалить сообщение в самом Discord
         try:
             await delete_message(entry["channel_id"], entry["message_id"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Delete Error] Не удалось удалить сообщение из Discord: {e}")
+            # Если нужно прерывать удаление из базы при ошибке Discord —
+            # можно раскомментировать строку ниже:
+            # return RedirectResponse("/", status_code=303)
+
+        # 2. Удаляем из Mokky.dev
         storage.delete(key)
+
     return RedirectResponse("/", status_code=303)

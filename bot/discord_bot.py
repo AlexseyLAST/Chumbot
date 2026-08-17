@@ -82,7 +82,25 @@ async def edit_message(channel_id: int, message_id: int, content: str | None = N
     return message
 
 
-async def delete_message(channel_id: int, message_id: int) -> None:
-    channel = await _get_channel(channel_id)
-    message = await channel.fetch_message(message_id)
-    await message.delete()
+async def delete_message(channel_id: int | str, message_id: int | str):
+    """Удаляет сообщение из канала Discord по его ID."""
+    try:
+        c_id = int(channel_id)
+        m_id = int(message_id)
+
+        # Сначала пробуем из кэша, если нет — запрашиваем с серверов Discord
+        channel = bot.get_channel(c_id)
+        if not channel:
+            channel = await bot.fetch_channel(c_id)
+
+        if channel:
+            msg = await channel.fetch_message(m_id)
+            await msg.delete()
+            print(f"[Discord] Сообщение {m_id} успешно удалено из канала {c_id}.")
+        else:
+            print(f"[Discord Error] Канал {c_id} не найден.")
+
+    except Exception as e:
+        print(f"[Discord Error] Ошибка при удалении сообщения {message_id}: {e}")
+        # Пробрасываем ошибку дальше, чтобы web/app.py видел её
+        raise e

@@ -226,9 +226,20 @@ async def update_message(
         return RedirectResponse("/", status_code=303)
 
     embed_data = {"title": embed_title, "description": content, "color": embed_color} if use_embed else None
-    await edit_message(
-        entry["channel_id"], entry["message_id"], content=(None if use_embed else content), embed_data=embed_data
-    )
+    try:
+        await edit_message(
+            entry["channel_id"],
+            entry["message_id"],
+            content=(None if use_embed else content),
+            embed_data=embed_data,
+        )
+    except Exception as exc:
+        # Запись в Mokky не меняем, если Discord не принял правку.
+        print(f"[Edit Error] Не удалось обновить сообщение {entry['message_id']} в Discord: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Discord не принял изменение сообщения. Запись в панели не изменена.",
+        ) from exc
 
     entry.update(
         {
@@ -248,16 +259,16 @@ async def remove_message(request: Request, key: str):
     entry = storage.get(key)
     
     if entry:
-        # 1. Сначала пробуем удалить сообщение в самом Discord
+        # Сначала удаляем в Discord. Запись в Mokky удаляется только при успехе.
         try:
             await delete_message(entry["channel_id"], entry["message_id"])
-        except Exception as e:
-            print(f"[Delete Error] Не удалось удалить сообщение из Discord: {e}")
-            # Если нужно прерывать удаление из базы при ошибке Discord —
-            # можно раскомментировать строку ниже:
-            # return RedirectResponse("/", status_code=303)
+        except Exception as exc:
+            print(f"[Delete Error] Не удалось удалить сообщение {entry['message_id']} из Discord: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Discord не удалил сообщение. Запись в панели сохранена.",
+            ) from exc
 
-        # 2. Удаляем из Mokky.dev
         storage.delete(key)
 
     return RedirectResponse("/", status_code=303)

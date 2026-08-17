@@ -56,7 +56,9 @@ def build_embed(title: str = "", description: str = "", color_hex: str = DEFAULT
     return discord.Embed(**kwargs)
 
 
-async def _get_channel(channel_id: int) -> discord.abc.Messageable:
+async def _get_channel(channel_id: int | str) -> discord.abc.Messageable:
+    """Возвращает канал Discord, независимо от типа ID из хранилища."""
+    channel_id = int(channel_id)
     channel = bot.get_channel(channel_id)
     if channel is None:
         channel = await bot.fetch_channel(channel_id)
@@ -72,9 +74,10 @@ async def send_message(channel_id: int, content: str | None = None, embed_data: 
     return await channel.send(content=content, embed=embed)
 
 
-async def edit_message(channel_id: int, message_id: int, content: str | None = None, embed_data: dict | None = None) -> discord.Message:
+async def edit_message(channel_id: int | str, message_id: int | str, content: str | None = None, embed_data: dict | None = None) -> discord.Message:
+    """Обновляет сообщение и передаёт ошибку Discord вызывающему коду."""
     channel = await _get_channel(channel_id)
-    message = await channel.fetch_message(message_id)
+    message = await channel.fetch_message(int(message_id))
     embed = None
     if embed_data:
         embed = build_embed(embed_data.get("title", ""), embed_data.get("description", ""), embed_data.get("color", DEFAULT_COLOR))
@@ -84,23 +87,9 @@ async def edit_message(channel_id: int, message_id: int, content: str | None = N
 
 async def delete_message(channel_id: int | str, message_id: int | str):
     """Удаляет сообщение из канала Discord по его ID."""
-    try:
-        c_id = int(channel_id)
-        m_id = int(message_id)
-
-        # Сначала пробуем из кэша, если нет — запрашиваем с серверов Discord
-        channel = bot.get_channel(c_id)
-        if not channel:
-            channel = await bot.fetch_channel(c_id)
-
-        if channel:
-            msg = await channel.fetch_message(m_id)
-            await msg.delete()
-            print(f"[Discord] Сообщение {m_id} успешно удалено из канала {c_id}.")
-        else:
-            print(f"[Discord Error] Канал {c_id} не найден.")
-
-    except Exception as e:
-        print(f"[Discord Error] Ошибка при удалении сообщения {message_id}: {e}")
-        # Пробрасываем ошибку дальше, чтобы web/app.py видел её
-        raise e
+    c_id = int(channel_id)
+    m_id = int(message_id)
+    channel = await _get_channel(c_id)
+    message = await channel.fetch_message(m_id)
+    await message.delete()
+    print(f"[Discord] Сообщение {m_id} успешно удалено из канала {c_id}.")

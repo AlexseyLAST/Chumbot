@@ -77,6 +77,11 @@ def slugify(name: str) -> str:
 
 def discord_failure_detail(action: str, exc: Exception) -> str:
     """Понятное объяснение типовых ответов API Discord для панели."""
+    if isinstance(exc, discord.NotFound) and exc.code == 10003:
+        return (
+            f"Discord не нашёл канал для операции «{action}». "
+            "Сохранённый ID канала повреждён или бот больше не имеет доступа к этому каналу."
+        )
     if isinstance(exc, discord.NotFound):
         return (
             f"Discord не нашёл сообщение для операции «{action}». "
@@ -188,7 +193,9 @@ async def new_form(request: Request):
 async def create_message(
     request: Request,
     name: str = Form(...),
-    channel_id: int = Form(...),
+    # Discord snowflake — 19-значное число. Mokky работает с JavaScript и
+    # округляет большие JSON-числа, поэтому ID всегда храним строками.
+    channel_id: str = Form(...),
     content: str = Form(""),
     use_embed: bool = Form(False),
     embed_title: str = Form(""),
@@ -204,7 +211,7 @@ async def create_message(
         {
             "name": name,
             "channel_id": channel_id,
-            "message_id": message.id,
+            "message_id": str(message.id),
             "content": content,
             "use_embed": use_embed,
             "embed_title": embed_title,

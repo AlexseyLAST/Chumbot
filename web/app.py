@@ -4,9 +4,11 @@
 
 import os
 import re
+import logging
 from pathlib import Path
 
 import httpx
+import discord
 from fastapi import FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -39,6 +41,7 @@ ALLOWED_USERS = [
 ]
 
 app = FastAPI(title="Discord Rules Manager")
+logger = logging.getLogger(__name__)
 
 # 1. Сначала подключаем ProxyHeadersMiddleware
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
@@ -70,6 +73,23 @@ def check_auth(request: Request) -> dict:
 def slugify(name: str) -> str:
     slug = re.sub(r"[^a-zA-Z0-9а-яА-Я]+", "-", name.strip().lower()).strip("-")
     return slug or "message"
+
+
+def discord_failure_detail(action: str, exc: Exception) -> str:
+    """Понятное объяснение типовых ответов API Discord для панели."""
+    if isinstance(exc, discord.NotFound):
+        return (
+            f"Discord не нашёл сообщение для операции «{action}». "
+            "Возможно, оно уже удалено в Discord или в Mokky сохранён неверный ID."
+        )
+    if isinstance(exc, discord.Forbidden):
+        return (
+            f"Discord запретил операцию «{action}». Проверьте, что бот видит канал и имеет права "
+            "Read Message History, Send Messages и Manage Messages."
+        )
+    if isinstance(exc, discord.HTTPException):
+        return f"Discord отклонил операцию «{action}» (HTTP {exc.status}, код {exc.code}): {exc.text}"
+    return f"Не удалось выполнить операцию «{action}» в Discord: {exc}"
 
 
 # --- OAuth2 Маршруты ---
@@ -235,10 +255,10 @@ async def update_message(
         )
     except Exception as exc:
         # Запись в Mokky не меняем, если Discord не принял правку.
-        print(f"[Edit Error] Не удалось обновить сообщение {entry['message_id']} в Discord: {exc}")
+        logger.exception("[Edit Error] Не удалось обновить сообщение %s в Discord", entry["message_id"])
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Discord не принял изменение сообщения. Запись в панели не изменена.",
+            detail=discord_failure_detail("редактирование", exc),
         ) from exc
 
     entry.update(
@@ -263,10 +283,10 @@ async def remove_message(request: Request, key: str):
         try:
             await delete_message(entry["channel_id"], entry["message_id"])
         except Exception as exc:
-            print(f"[Delete Error] Не удалось удалить сообщение {entry['message_id']} из Discord: {exc}")
+            logger.exception("[Delete Error] Не удалось удалить сообщение %s из Discord", entry["message_id"])
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Discord не удалил сообщение. Запись в панели сохранена.",
+                detail=discord_failure_detail("удаление", exc),
             ) from exc
 
         storage.delete(key)
